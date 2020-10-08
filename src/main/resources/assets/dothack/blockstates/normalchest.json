@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "dothack:block/normalchest", "y": 270 },
+        "facing=south": { "model": "dothack:block/normalchest", "y": 90 },
+        "facing=west":  { "model": "dothack:block/normalchest", "y": 180 },
+        "facing=east":  { "model": "dothack:block/normalchest" }
+    }
+}

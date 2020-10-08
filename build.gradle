@@ -1,0 +1,159 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url  = 'https://plugins.gradle.org/m2/' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+		classpath "com.wynprice.cursemaven:CurseMaven:2.1.5"
+        classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.4.0'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: "com.wynprice.cursemaven"
+apply plugin: 'com.matthewprenger.cursegradle'
+
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+version = "1.0.0-a"
+group = "mod.azure.dothack"
+archivesBaseName = "dotHack-1.16.3"
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+
+minecraft {
+    mappings channel: 'snapshot', version: '20200916-1.16.2'
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                dothackweapons {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                dothackweapons {
+                    source sourceSets.main
+                }
+            }
+        }
+        data {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            args '--mod', 'dothackweapons', '--all', '--output', file('src/generated/resources/')
+            mods {
+                dothackweapons {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+	jcenter()
+	maven {
+        name = "jitpack"
+        url "https://jitpack.io"
+    }
+    maven { url = "https://maven.theillusivec4.top/" }
+    maven {
+        url 'https://www.dogforce-games.com/maven/'
+    }
+    maven {
+        name = "CurseForge"
+        url = "https://minecraft.curseforge.com/api/maven/"
+    }
+    maven { url 'https://repo.repsy.io/mvn/gandiber/geckolib' }
+}
+
+dependencies {
+  	minecraft 'net.minecraftforge:forge:1.16.3-34.1.0'
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.2-4.0.0.1")
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.2-4.0.0.1:api")
+	compile fg.deobf("curse.maven:JEI:3046220")
+	implementation fg.deobf('software.bernie.geckolib:forge-1.16.3-geckolib:2.1.1')
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "dothack",
+            "Specification-Vendor": "AzureDoomC",
+            "Specification-Version": "1", // We are version 1 of ourselves
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor" :"AzureDoomC",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar') 
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
+
+processResources {
+	doLast {   
+        def jsonMinifyStart = System.currentTimeMillis()
+        def jsonMinified = 0
+        def jsonBytesSaved = 0
+        fileTree(dir: outputs.files.asPath, include: '**/*.json').each {   
+            File file = it
+            jsonMinified++
+            def oldLength = file.length()
+            file.text = JsonOutput.toJson(new JsonSlurper().parse(file))
+            jsonBytesSaved += oldLength - file.length()
+        }  
+        println('Minified ' + jsonMinified + ' json files. Saved ' + jsonBytesSaved + ' bytes. Took ' + (System.currentTimeMillis() - jsonMinifyStart) + 'ms.')
+    }
+}
+
+curseforge {
+
+    def curseProp = new Properties()
+    File secretPropsFile = file("key.properties")
+    curseProp.load(secretPropsFile.newInputStream())
+
+    project {
+        apiKey = curseProp.getProperty('curseKey')
+        id = "${curse_id}"
+        releaseType = "${curse_release}"
+        changelogType = 'text'
+        changelog = file('CHANGELOG.txt')
+        addGameVersion("1.16.3")
+        addGameVersion("1.16.2")
+        addGameVersion("Forge")
+        addGameVersion("Java 8")
+
+        relations {
+            requiredDependency 'curios'  
+            requiredDependency 'geckolib'    
+        }
+    }
+}

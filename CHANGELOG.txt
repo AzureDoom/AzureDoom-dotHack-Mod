@@ -1,0 +1,5 @@
+v.1.0.0-a
+
+- Complete Rewrite
+
+**This is an alpha release, currently mobs do not fully naturally spawn correctly. There is still a ton of work to be done regarding getting crafting set up and fixing a few other things. There is still about 30ish mobs to add before a Beta release. Full release will when Mine and Slash gets it's 1.16.3 port.**
