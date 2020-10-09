@@ -1,7 +1,7 @@
 modLoader="javafml"
 loaderVersion="[32,)"
 license="MIT"
-issueTrackerURL="https://github.com/AzureZhen/dotHackWeapons/issues"
+issueTrackerURL="https://github.com/AzureDoom/AzureDoom-dotHack-Mod/issues"
 logoFile="logo.png"
 [[mods]] 
 modId="dothack"
